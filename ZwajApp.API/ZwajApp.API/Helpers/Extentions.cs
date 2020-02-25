@@ -19,5 +19,15 @@ namespace ZwajApp.API.Helpers
             Response.Headers.Add("Access-Control-Expose-Header", "Application-Error");
             Response.Headers.Add("Access-Control-Allow-Origin", "*");
         }
+
+        public static int CalculateAge(this DateTime datetime)
+        {
+            var age = DateTime.Today.Year - datetime.Year;
+            if (datetime.AddYears(age) > DateTime.Today)
+            {
+                age--;
+            }
+            return age;
+        }
     }
 }

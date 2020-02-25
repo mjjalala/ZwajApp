@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -35,8 +36,13 @@ namespace ZwajApp.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<DataContext>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+            .AddJsonOptions(option => {
+                option.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
             services.AddCors();
+            services.AddAutoMapper(); // تستخدم لربط DTos مع controller
+            services.AddTransient<TrailData>();
             //اضافة خدمة جديدة وتبني نسخة جديدة في كل مرة يتم استدعاء على المستودع
             // المشكلة في حالة الطلبات المتزامنة بحصل فيها مشكلة 
             // لو زاد عدد الركوست مابنفضلها
@@ -47,24 +53,25 @@ namespace ZwajApp.API
             //AddSingleton  نفس 
             //تدعم الطلبات المتزامنة بصيرش مشكلة  لانها بتعمل انستنس لكل عملية طلب وبكون في سرعة
             services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<IZwajRepository, ZwajRepository>();
 
             //اضافة middelware authontication
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(Options =>
-        {
-            Options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
-                ValidateIssuer = false,
-                ValidateAudience = false
+             .AddJwtBearer(Options =>
+             {
+                 Options.TokenValidationParameters = new TokenValidationParameters
+                 {
+                     ValidateIssuerSigningKey = true,
+                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
+                     ValidateIssuer = false,
+                     ValidateAudience = false
 
-            };
-        });
+                 };
+             });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, TrailData TrailData)
         {
             if (env.IsDevelopment())
             {
@@ -92,10 +99,11 @@ namespace ZwajApp.API
                });
                 
             }
-
+           // TrailData.TrialUsers();
             app.UseHttpsRedirection();
             //بناء الصلاحيات بينه وبين SPA
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            app.UseAuthentication();
             app.UseMvc();
         }
     }

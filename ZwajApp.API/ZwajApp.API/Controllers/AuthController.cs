@@ -61,7 +61,7 @@ namespace ZwajApp.API.Controllers
                 {
                 new Claim(ClaimTypes.NameIdentifier,userFromRepo.Id.ToString()),
                 new Claim(ClaimTypes.Name,userFromRepo.UserName)
-            };
+                };
                 //  الي بعطي التكون هوا السيرفر  هوا الي بولدها وبتكون مخزنة على السيرفر ا 
                 //تعني المطالبة بطلب السيرفر المعطيات تعت التوكن Claim 
                 // بالتالي التوكن مهمته انو السيرفر مش حيروح يجيب البيانات من قاعدة البيانات حيجيبهم من التوكن 
